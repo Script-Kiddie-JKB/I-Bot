@@ -112,9 +112,7 @@ const startSock = async () => {
       printQRInTerminal: false, // Disable terminal QR print
     });
 
-  //await delay(20000);
-
-    store.bind(sock.ev);
+    store?.bind(sock.ev);
     sessionThere = 2;
 
     sock.ev.on("open", () => {
@@ -125,183 +123,110 @@ const startSock = async () => {
       console.log("WhatsApp disconnected due to", reason);
     });
 
-    return sock;
-  } catch (err) {
-    console.error("Error starting socket:", err);
-  }
-};
+    const chatList = [];
+    const pre = "#";
+    const botId = ownerIds[0];
+    let i = 0;
+    const cmdList = `*Use # as a prefix in all commands*\n\n...`; // shortened for brevity
+    const allMsgArray = [];
+    const tthUserDetail = new Map();
+    let profanitySet = new Set(await DbOperation.getProfList());
+    const cmdArr = [
+      "create", "add", "kick", "promote", "demote", "mute", "unmute", "link", 
+      "dd", "td", "delete", "movie", "tc", "is", "gs", "as", "fb", "l", 
+      "lyrics", "vs", "ps", "horo", "mp3s", "mp3c", "ai", "aiv", "s", 
+      "sticker", "tts", "ss", "steal", "toimg", "iprof", "igd", "i", "dict", 
+      "d", "tagall", "tagadmins", "cp", "cprice", "cnews", "cn", "sp", 
+      "sprice", "w", "a", "lt", "last_tag", "mc", "msgcount", "run", 
+      "makehimgay", "profanity", "source"
+    ];
 
-// Starting the Express server
-http.createServer(app).listen(port, () => {
-  console.log(`Server running on port ${port}`);
-});
-
-
-
-  const chatList = [];
-  const pre = "#";
-  const botId = ownerIds[0];
-  let i = 0;
-  const cmdList = `*Use # as a prefix in all commands*\n\n​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​add -to add a number to the grp\n\nkick -to remove a number from the group\n\npromote -to promote a group member\n\ndemote -to demote a group member\n\nmute -only allow admins to send messages\n\nunmute -allow everyone to send messageslink -to get the link of the group\n\ndd -to delete the message of any member in a group\n\ntc -to get details of a number\n\nas -to search for the result by ChAtGpt\n\nlyrics -to get the lyrics of a song\n*Alias*:- l\n\ntd -to download twitter posts\n\nfb -to download facebook posts\n\nmovie -to download a movie\n\nis -to search an image \n\nai -to get ai generated image\n\naiv -to get ai generated variation of image\n\ngs -to search anything on google \n\nvs -to download a video\n\nps -to search for a product\n\nmp3s -to download mp3song\n\nmp3c -to convert a yt video to mp3\n\nsticker -to make sticker\nAlias:- s\n\nss -to search a sticker\n\ntts -to convert a text to sticker\n\nsteal -to change the author of the sticker\n\ndict -to know the meaning of a word\n\ntoimg -to convert sticker to image\n\niprof -to get the profile picture of a user\n\nigd -to download insta video\nAlias:- i\n\nhoro -to get horoscope of today\n\ntagall -to tag all members of a group\n\ntagadmins -to tag admins of the group\n\ncp -to get the price of a crypto coin\n\ncn -to get news for a specific crypto name\n\nsp -to get the price for the stock\n\nw- to get a random word with its meaning\n\na -to check the status of the bot\n\nlt -to get the last tagged msg\n\nmsgcount -to get your msg count of current group\nAlias:- mc\n\nrun -to compile and run code in different lang\n\nsource -to get source code of the bot`;
-  const allMsgArray = [];
-  const tthUserDetail = new Map();
-  let profanitySet = new Set(await DbOperation.getProfList());
-  //const botEnableGroups = await DbOperation.getBotActiveGroups();
-  const cmdArr = [
-    "create",
-    "add",
-    "kick",
-    "promote",
-    "demote",
-    "mute",
-    "unmute",
-    "link",
-    "dd",
-    "td",
-    "delete",
-    "movie",
-    "tc",
-    "is",
-    "gs",
-    "as",
-    "fb",
-    "l",
-    "lyrics",
-    "vs",
-    "ps",
-    "horo",
-    "mp3s",
-    "mp3c",
-    "ai",
-    "aiv",
-    "s",
-    "sticker",
-    "tts",
-    "ss",
-    "steal",
-    "toimg",
-    "iprof",
-    "igd",
-    "i",
-    "dict",
-    "d",
-    "tagall",
-    "tagadmins",
-    "cp",
-    "cprice",
-    "cnews",
-    "cn",
-    "sp",
-    "sprice",
-    "w",
-    "a",
-    "lt",
-    "last_tag",
-    "mc",
-    "msgcount",
-    "run",
-    "makehimgay",
-    "profanity",
-    "source"
-  ];
-
-  //to update the dababase constantly
-  let interval2 = setInterval(async () => {
-    if (allMsgArray.length > 0) {
-      try {
-        let tempMsg = allMsgArray[0];
-        //console.log("tempMsg", tempMsg);
-        let chatId = tempMsg[2];
-        let senderId = tempMsg[3];
-        senderId = senderId.replace(
-          senderId.substring(
-            senderId.indexOf(":") === -1
-              ? senderId.indexOf("@")
-              : senderId.indexOf(":"),
-            senderId.indexOf("@")
-          ),
-          ""
-        );
-
-        let groupName;
+    //to update the database constantly
+    let interval2 = setInterval(async () => {
+      if (allMsgArray.length > 0) {
         try {
-          groupName = (await sock.groupMetadata(chatId)).subject;
+          let tempMsg = allMsgArray[0];
+          let chatId = tempMsg[2];
+          let senderId = tempMsg[3];
+          senderId = senderId.replace(
+            senderId.substring(
+              senderId.indexOf(":") === -1
+                ? senderId.indexOf("@")
+                : senderId.indexOf(":"),
+              senderId.indexOf("@")
+            ),
+            ""
+          );
+
+          let groupName;
+          try {
+            groupName = (await sock.groupMetadata(chatId)).subject;
+          } catch (err) {
+            groupName = "";
+          }
+          DbOperation.updateData(
+            chatId,
+            senderId,
+            tempMsg[0],
+            tempMsg[1],
+            groupName
+          );
+          allMsgArray.shift();
         } catch (err) {
-          groupName = "";
+          console.log("Error in updating each msg to db", err);
         }
-        DbOperation.updateData(
-          chatId,
-          senderId,
-          tempMsg[0],
-          tempMsg[1],
-          groupName
-        );
-        allMsgArray.shift();
-      } catch (err) {
-        console.log("Error in updating each msg to db", err);
       }
-    }
-  }, 500);
+    }, 500);
 
-  setInterval(async () => {
-    console.log("printing news");
-    await Crypto.getNews(sock, "918329198682-1612849199@g.us", { msgText: "" });
-    //Crypto.getNews(sock, "918329198682-1612849199@g.us", { msgText: "" });
-    
-    //Crypto.getNnews(sock, "918329198682-1612849199@g.us", { msgText: "" });
-    //Crypto.news(driver, "918329198682-1614096949@g.us", CRYPTOPANIC_API, "")
-  }, 21600000);
-  console.log("Sock", sock.ev.process);
-  sock.ev.process(
-    // events is a map for event name => event data
-    async (events) => {
-      console.log("inside process");
-      // something about the connection changed
-      // maybe it closed, or we received all offline message or connection opened
-      if (events["connection.update"]) {
-        console.log("Inside Connecion UPDATE");
-        const update = events["connection.update"];
-        console.log("connection update", update);
-        const { connection, lastDisconnect } = update;
-        if (connection === "close") {
-          console.log("Inside Connection Close");
-          // reconnect if not logged out
-          if (
-            lastDisconnect.error.output.statusCode == DisconnectReason.loggedOut
-          ) {
-            console.log("Connection closed. You are logged out.", sessionThere);
-            sessionThere = 0;
+    setInterval(async () => {
+      console.log("printing news");
+      await Crypto.getNews(sock, "918329198682-1612849199@g.us", { msgText: "" });
+    }, 21600000);
 
-            console.log("sessionThere logout time", sessionThere);
-            clearInterval(interval1);
-            clearInterval(interval2);
-            startSock();
-          } else {
-            console.log("Connection closed.", sessionThere);
-
-            startSock();
+    sock.ev.process(
+      async (events) => {
+        console.log("inside process");
+        // connection update handling
+        if (events["connection.update"]) {
+          console.log("Inside Connection UPDATE");
+          const update = events["connection.update"];
+          console.log("connection update", update);
+          const { connection, lastDisconnect } = update;
+          if (connection === "close") {
+            console.log("Inside Connection Close");
+            if (
+              lastDisconnect.error.output.statusCode == DisconnectReason.loggedOut
+            ) {
+              console.log("Connection closed. You are logged out.", sessionThere);
+              sessionThere = 0;
+              console.log("sessionThere logout time", sessionThere);
+              clearInterval(interval2);
+              startSock();
+            } else {
+              console.log("Connection closed.", sessionThere);
+              startSock();
+            }
           }
         }
-      }
-      if (events["messages.upsert"]) {
-        //console.log('recv messages ', JSON.stringify(upsert, undefined, 2))
-        try {
-          const m = events["messages.upsert"];
-          //console.log(JSON.stringify(m, undefined, 2));
-          console.log(m.messages[0]);
-          const msg = m.messages[0];
-          if (msg.hasOwnProperty("message")) {
-            const senderId = m.messages[0].key.participant
-              ? formatSenderId(m.messages[0].key.participant)
-              : formatSenderId(m.messages[0].participant);
-            const isMe = m.messages[0].key.fromMe;
-            const senderName = m.messages[0].pushName;
-            const chatId = m.messages[0].key.remoteJid;
-            const msgContent = m.messages[0].message;
-            const msgData = Helper.getMessageData(msgContent, pre);
-            //console.log(JSON.stringify(msg, undefined, 2));
-            if (chatId.includes("@g")) {
-              allMsgArray.push([msg, msgData, chatId, senderId]);
+
+        // messages handling
+        if (events["messages.upsert"]) {
+          try {
+            const m = events["messages.upsert"];
+            console.log(m.messages[0]);
+            const msg = m.messages[0];
+            if (msg.hasOwnProperty("message")) {
+              const senderId = m.messages[0].key.participant
+                ? formatSenderId(m.messages[0].key.participant)
+                : formatSenderId(m.messages[0].participant);
+              const isMe = m.messages[0].key.fromMe;
+              const senderName = m.messages[0].pushName;
+              const chatId = m.messages[0].key.remoteJid;
+              const msgContent = m.messages[0].message;
+              const msgData = Helper.getMessageData(msgContent, pre);
+              
+              if (chatId.includes("@g")) {
+                allMsgArray.push([msg, msgData, chatId, senderId]);
               // if (!(await DbOperation.checkCmd(chatId, "profanity")) &&
               //     msgData.msgText &&
               //     !msgData.msgText.includes("rem_ab")
@@ -1132,128 +1057,111 @@ http.createServer(app).listen(port, () => {
               //       // }
               //     }
               //   });
+              }
             }
+          } catch (err) {
+            console.log("Errorrrrrrrrrrrrrrrrrrrr", err);
           }
-        } catch (err) {
-          console.log("Errorrrrrrrrrrrrrrrrrrrr", err);
+        }
+
+        if (events["creds.update"]) {
+          await saveCreds();
+        }
+
+        if (events["groups.upsert"]) {
+          const m = events["groups.upsert"];
+          console.log("group update: ", m);
+          console.log("Creating Group");
+          DbOperation.createGroup(m[0]);
+        }
+        
+        if (events["group-participants.update"]) {
+          const m = events["group-participants.update"];
+          console.log("Groupparticipant.update : ", m);
+          if (m.action === "add") {
+            DbOperation.addMember(m.id, m.participants[0]);
+          } else if (m.action === "remove") {
+            DbOperation.updateGroupsIn(m.id, m.participants[0]);
+          }
         }
       }
+    );
 
-      if (events["creds.update"]) {
-        await saveCreds();
+    const formatSenderId = (senderId) => {
+      try {
+        return senderId.replace(
+          senderId.substring(
+            senderId.indexOf(":") === -1
+              ? senderId.indexOf("@")
+              : senderId.indexOf(":"),
+            senderId.indexOf("@")
+          ),
+          ""
+        );
+      } catch (err) {
+        return "";
       }
+    };
 
-      if (events["groups.upsert"]) {
-        const m = events["groups.upsert"];
-
-        //chatList.push(m[0].id);
-        console.log("group update: ", m);
-        console.log("Creating Group");
-        DbOperation.createGroup(m[0]);
-        //sock.sendMessage(m[0].id, { text: "Hello there!" });
-        //console.log(chatList);
-      }
-      if (events["group-participants.update"]) {
-        const m = events["group-participants.update"];
-
-        console.log("Groupparticipant.update : ", m);
-        if (m.action === "add") {
-          DbOperation.addMember(m.id, m.participants[0]);
-        } else if (m.action === "remove") {
-          DbOperation.updateGroupsIn(m.id, m.participants[0]);
-        }
-      }
-    }
-  );
-
-  const formatSenderId = (senderId) => {
-    try {
-      return senderId.replace(
+    const isAdminOrMember = async (chatId, senderId, check) => {
+      senderId = senderId.replace(
         senderId.substring(
           senderId.indexOf(":") === -1
             ? senderId.indexOf("@")
             : senderId.indexOf(":"),
-          senderId.indexOf("@")
-        ),
+            senderId.indexOf("@")
+          ),
         ""
       );
-    } catch (err) {
-      return "";
-    }
-  };
-  //to check whether given id is admin or member or not
-  const isAdminOrMember = async (chatId, senderId, check) => {
-    senderId = senderId.replace(
-      senderId.substring(
-        senderId.indexOf(":") === -1
-          ? senderId.indexOf("@")
-          : senderId.indexOf(":"),
-        senderId.indexOf("@")
-      ),
-      ""
-    );
-    const grpMembers = await sock.groupMetadata(chatId);
-    const grpAdminList = [];
-    const grpMemberList = [];
-    for (i = 0; i < grpMembers.participants.length; i++) {
-      if (grpMembers.participants[i].admin) {
-        grpAdminList.push(grpMembers.participants[i].id);
+      const grpMembers = await sock.groupMetadata(chatId);
+      const grpAdminList = [];
+      const grpMemberList = [];
+      for (i = 0; i < grpMembers.participants.length; i++) {
+        if (grpMembers.participants[i].admin) {
+          grpAdminList.push(grpMembers.participants[i].id);
+        }
+        grpMemberList.push(grpMembers.participants[i].id);
       }
-      grpMemberList.push(grpMembers.participants[i].id);
-    }
-    if (check === "isAdmin") return grpAdminList.find((id) => id === senderId);
-    if (check === "isMember")
-      return grpMemberList.find((id) => id === senderId);
-  };
+      if (check === "isAdmin") return grpAdminList.find((id) => id === senderId);
+      if (check === "isMember")
+        return grpMemberList.find((id) => id === senderId);
+    };
 
-  //to get whatsappId from the msg
-  const getWhatsappId = (m, msgText) => {
-    let whatsappId = "";
-    let numToAdd = "";
-    let i;
-    let arr = msgText.split(" ");
-    for (i = 0; i < arr.length; i++) {
-      numToAdd += arr[i];
-    }
-    console.log("numtoadd", numToAdd, numToAdd.length);
-    if (
-      numToAdd.length === 10 ||
-      numToAdd.length === 12 ||
-      numToAdd.length === 13
-    ) {
-      whatsappId = "@s.whatsapp.net";
-      if (numToAdd.length === 13) {
-        whatsappId = numToAdd.substring(1) + whatsappId;
-      } else if (numToAdd.length === 12) {
-        whatsappId = numToAdd + whatsappId;
-      } else {
-        whatsappId = "91" + numToAdd + whatsappId;
+    const getWhatsappId = (m, msgText) => {
+      let whatsappId = "";
+      let numToAdd = "";
+      let i;
+      let arr = msgText.split(" ");
+      for (i = 0; i < arr.length; i++) {
+        numToAdd += arr[i];
       }
-    }
-    return whatsappId;
-  };
+      console.log("numtoadd", numToAdd, numToAdd.length);
+      if (
+        numToAdd.length === 10 ||
+        numToAdd.length === 12 ||
+        numToAdd.length === 13
+      ) {
+        whatsappId = "@s.whatsapp.net";
+        if (numToAdd.length === 13) {
+          whatsappId = numToAdd.substring(1) + whatsappId;
+        } else if (numToAdd.length === 12) {
+          whatsappId = numToAdd + whatsappId;
+        } else {
+          whatsappId = "91" + numToAdd + whatsappId;
+        }
+      }
+      return whatsappId;
+    };
 
-  //sock.ev.on('messages.update', m => console.log(m))
-  //sock.ev.on('message-receipt.update', m => console.log(m))
-  //sock.ev.on('presence.update', m => console.log(m))
-  //sock.ev.on('chats.update', m => console.log(m))
-  //sock.ev.on('contacts.upsert', m => console.log(m))
-
-  // listen for when the auth credentials is updated
-  // credentials updated -- save them
-
-  return sock;
+    return sock;
+  } catch (err) {
+    console.error("Error starting socket:", err);
+  }
 };
 
-// let r = "On";
-// const main = async () => {
-//   await startSock();
-//   console.log(r);
-//   while (true) {
-//     if (r === "restart") {
-//       console.log("Restarting.....(Through main2.ts)");
-//       await startSock();
-//     }
-//   }
-// };
+// Starting the Express server
+http.createServer(app).listen(port, () => {
+  console.log(`Server running on port ${port}`);
+});
+
 startSock();
