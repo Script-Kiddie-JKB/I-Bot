@@ -1,13 +1,6 @@
 require("dotenv").config({ path: "./Keys.env" });
-const port=process.env.PORT || 3000;
-const http =require("http");
-http.createServer((req,res)=>{
-  res.writeHead(200,{"Content-Type":"text/plain"});
-  res.write("Hello Visitor! ");
-  res.end();
-}).listen(port,()=>{
-  console.log(`listening on port ${port}`);
-});
+const express = require("express");
+const http = require("http");
 const { Boom } = require("@hapi/boom");
 const P = require("pino");
 const {
@@ -20,155 +13,130 @@ const {
   MessageRetryMap,
   useMultiFileAuthState,
 } = require("@adiwajshing/baileys");
+const fs = require("fs");
+const path = require("path");
+const qrcode = require("qrcode"); // QR code generation library
+const { MongoClient, ServerApiVersion } = require("mongodb");
+const mdClient = require("./Db/dbConnection.js");
 const groupManage = require("./bot_modules/groupManage.js");
 const textToHand = require("./bot_modules/textToHandwriting.js");
 const ProductSearch = require("./bot_modules/ProductSearch.js");
 const Search = require("./bot_modules/Search.js");
-const fs = require("fs");
 const Helper = require("./bot_modules/helper.js");
 const Sticker = require("./bot_modules/sticker.js");
 const InstaDownloader = require("./bot_modules/instaDownloader.js");
 const Crypto = require("./bot_modules/crypto.js");
-const { MongoClient, ServerApiVersion } = require("mongodb");
-const mdClient = require("./Db/dbConnection.js");
 const DbOperation = require("./Db/dbOperation.js");
 const MsgDetails = require("./bot_modules/msgDetails.js");
 const Compiler = require("./bot_modules/compiler.js");
 const Profanity = require("./bot_modules/profanity.js");
-const RandomWord=require("./bot_modules/randomWord");
-const Horoscope=require("./bot_modules/horoscope");
-const TwitterDownloader=require("./bot_modules/twitterDownloader");
-const MovieLinks=require("./bot_modules/movie");
-const TrueCaller=require("./bot_modules/trueCaller");
-const StickerSearch=require("./bot_modules/stickerSearch");
-const Lyrics=require("./bot_modules/lyrics");
-const AiImage=require("./bot_modules/aiImage");
-const ChatGpt=require("./bot_modules/chatGPT");
+const RandomWord = require("./bot_modules/randomWord");
+const Horoscope = require("./bot_modules/horoscope");
+const TwitterDownloader = require("./bot_modules/twitterDownloader");
+const MovieLinks = require("./bot_modules/movie");
+const TrueCaller = require("./bot_modules/trueCaller");
+const StickerSearch = require("./bot_modules/stickerSearch");
+const Lyrics = require("./bot_modules/lyrics");
+const AiImage = require("./bot_modules/aiImage");
+const ChatGpt = require("./bot_modules/chatGPT");
 const FacebookDownloader = require("./bot_modules/fbDownloader");
+
 let ownerIdsString = process.env.OWNER_IDS;
 const ownerIds = ownerIdsString.split(" ").map((id) => id + "@s.whatsapp.net");
 mdClient.connect();
 
+const app = express();
+const port = process.env.PORT || 3000;
 const MAIN_LOGGER = require("@adiwajshing/baileys/lib/Utils/logger");
-
-// const logger = MAIN_LOGGER.child({});
-// logger.level = "trace";
 
 const useStore = !process.argv.includes("--no-store");
 const doReplies = !process.argv.includes("--no-reply");
 
-// external map to store retry counts of messages when decryption/encryption fails
-// keep this out of the socket itself, so as to prevent a message decryption/encryption loop across socket restarts
+// External map to store retry counts of messages when decryption/encryption fails
 const msgRetryCounterMap = MessageRetryMap;
-// the store maintains the data of the WA connection in memory
-// can be written out to a file & read from it
+
+// WebSocket store to maintain data in memory
 const store = useStore ? makeInMemoryStore({}) : undefined;
 
 let sessionThere = 1;
-// start a connection
+
+// QR Code endpoint to generate and display the QR code
+app.get("/qr", async (req, res) => {
+  try {
+    const sock = await startSock();
+
+    sock.ev.on("qr", (qr) => {
+      qrcode.toDataURL(qr, (err, url) => {
+        if (err) {
+          return res.status(500).send("Error generating QR code");
+        }
+        // Send the QR code image as a base64 string to the browser
+        res.send(`<img src="${url}" alt="WhatsApp Login QR Code" />`);
+      });
+    });
+  } catch (err) {
+    console.error("Error generating QR:", err);
+    res.status(500).send("Error generating QR");
+  }
+});
+
+// Function to start a WhatsApp connection
 const startSock = async () => {
   try {
     mdClient.connect((err) => {
-      let collection2 = mdClient
-        .db("whatsappSession")
-        .collection("whatsappSessionAuth");
+      let collection2 = mdClient.db("whatsappSession").collection("whatsappSessionAuth");
 
       collection2.find({ _id: 1 }).toArray(function (err, result) {
         if (err) throw err;
         let sessionAuth = result[0]["sessionAuth"];
-        console.log(sessionAuth, "asdadasdasdasdas");
         if (sessionAuth != "") {
           sessionAuth = JSON.parse(sessionAuth);
           sessionAuth = JSON.stringify(sessionAuth);
-          //console.log(session);
-          console.log("sessionThere=", sessionThere);
           if (sessionThere == 1) {
             fs.writeFileSync("auth_info_multi/creds.json", sessionAuth);
           } else if (sessionThere == 0) {
-            //fs.writeFileSync("./auth_info_multi.json", "");
-            fs.rmSync("auth_info_multi/creds.json", {
-              recursive: true,
-              force: true,
-            });
-          } else {
-            console.log("Creds Already there.");
+            fs.rmSync("auth_info_multi/creds.json", { recursive: true, force: true });
           }
-        } else {
-          console.log("Session Auth Empty");
         }
       });
     });
-    console.log("Local file written");
+
+    await delay(20000);
+    const { version, isLatest } = await fetchLatestBaileysVersion();
+
+    const { state, saveCreds } = await useMultiFileAuthState("auth_info_multi");
+    const sock = makeWASocket({
+      version,
+      auth: state,
+      msgRetryCounterMap: MessageRetryMap,
+      printQRInTerminal: false, // Disable terminal QR print
+    });
+
+  //await delay(20000);
+
+    store.bind(sock.ev);
+    sessionThere = 2;
+
+    sock.ev.on("open", () => {
+      console.log("WhatsApp connected");
+    });
+
+    sock.ev.on("close", (reason) => {
+      console.log("WhatsApp disconnected due to", reason);
+    });
+
+    return sock;
   } catch (err) {
-    console.error("Local file writing errors :", err);
+    console.error("Error starting socket:", err);
   }
-  await delay(20000);
-  //store.readFromFile("./baileys_store_multi.json");
-  // save every 10s
-  let interval1 = setInterval(() => {
-    // store.writeToFile("./baileys_store_multi.json");
-    try {
-      let sessionDataAuth = fs.readFileSync("auth_info_multi/creds.json");
-      sessionDataAuth = JSON.parse(sessionDataAuth);
-      sessionDataAuth = JSON.stringify(sessionDataAuth);
-      //console.log(sessionData);
-      let collection2 = mdClient
-        .db("whatsappSession")
-        .collection("whatsappSessionAuth");
-      //(chatid,{})
-      collection2.updateOne(
-        { _id: 1 },
-        { $set: { sessionAuth: sessionDataAuth } }
-      );
-      //console.log("db updated");
-    } catch (err) {
-      console.log("Db updation error : ", err);
-    }
-  }, 30000);
+};
 
-  // fetch latest version of WA Web
-  const { version, isLatest } = await fetchLatestBaileysVersion();
-  //console.log(`using WA v${version.join(".")}, isLatest: ${isLatest}`);
+// Starting the Express server
+http.createServer(app).listen(port, () => {
+  console.log(`Server running on port ${port}`);
+});
 
-  const { state, saveCreds } = await useMultiFileAuthState("auth_info_multi");
-  //await delay(20000);
-  const sock = makeWASocket({
-    version,
-    // logger,
-    printQRInTerminal: true,
-    auth: state,
-    msgRetryCounterMap,
-    defaultQueryTimeoutMs:undefined,
-    // implement to handle retries
-  });
 
-  //await delay(20000);
-
-  store.bind(sock.ev);
-  sessionThere = 2;
-  // const sendMessageWTyping = async(msg: AnyMessageContent, jid: string) => {
-  //     await sock.presenceSubscribe(jid);
-  //     await delay(500);
-
-  //     await sock.sendPresenceUpdate("composing", jid);
-  //     await delay(2000);
-
-  //     await sock.sendPresenceUpdate("paused", jid);
-
-  //     await sock.sendMessage(jid, msg);
-  // };
-  //await delay(20_000);
-  // sock.ev.on("chats.set", (item) =>
-  //     console.log(`recv ${item.chats.length} chats (is latest: ${item.isLatest})`)
-  // );
-  // sock.ev.on("messages.set", (item) =>
-  //     console.log(
-  //         `recv ${item.messages.length} messages (is latest: ${item.isLatest})`
-  //     )
-  // );
-  // sock.ev.on("contacts.set", (item) =>
-  //     console.log(`recv ${item.contacts.length} contacts`)
-  // );
 
   const chatList = [];
   const pre = "#";
